@@ -1,5 +1,16 @@
 # Listener module for artifact detection & mapping
 
+## Class
+
+```markdown
+0 person
+11 stop sign
+24 backpack
+25 umbrella
+39 bottle
+74 clock
+```
+
 ## TODOs
 
 - [x] conversion from topics to csv file
@@ -20,7 +31,7 @@
   track_reassociation_iou	0.3 (team 6 set to 0.15)
 
   take more time when using YOLO2
-  
+
 - [ ] debug visualize with `rqt_image_view`
 
   publish_debug_images	false -> **to publish a debug topic `/artefact_mapping/debug_image`**
@@ -33,13 +44,13 @@
   rostopic echo /W_artefact
   ```
 
-  
+
 
 - `object-tracking-pipeline.cc`
 
   ```c++
   # publish_debug_images set as True for puslishing debuging images
-  
+
   landmark_publisher_ = nh_.advertise<geometry_msgs::PointStamped>("/W_landmark", 1);
   artefact_publisher_ = nh_.advertise<artefact_msgs::Artefact>("/W_artefact", 1);
   ```

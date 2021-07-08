@@ -42,9 +42,9 @@ cd src
 ```bash
 # git clone https://github.com/ethz-asl/artefact_mapping.git --recursive -b summer_school2021
 # clone using ssh
-git clone git@github.com:hibetterheyj/artefact_mapping.git
+git clone git@github.com:hibetterheyj/artefact_mapping.git --recursive -b summer_school2021
 # clone using https
-https://github.com/hibetterheyj/artefact_mapping.git
+https://github.com/hibetterheyj/artefact_mapping.git --recursive -b summer_school2021
 catkin build artefact_mapping
 ```
 
