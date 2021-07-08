@@ -5,5 +5,11 @@
     <param name="sensor_calibration_file" value="$(find artefact_mapping)/share/camchain-smb$(arg smb_number).yaml"/>
     <param name="darknet_cfg_path" value="$(find artefact_mapping)/share/yolov3-tiny.cfg"/>
     <param name="darknet_weights_path" value="$(find artefact_mapping)/share/yolov3-tiny.weights"/>
+    <param name="darknet_classes" value="0,2,3,7,4,74,11,46"/>
+    <param name="object_tracker_detection_period" value="20"/>
+    <param name="darknet_detection_threshold" value="0.4"/>
+    <param name="darknet_nms_threshold" value="0.45"/>
+    <param name="tracker_confidence_threshold" value="0.8"/>
+    <param name="track_reassociation_iou" value="0.3"/>
   </node>  
 </launch>

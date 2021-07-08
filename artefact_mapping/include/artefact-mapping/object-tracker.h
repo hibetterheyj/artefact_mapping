@@ -43,7 +43,7 @@ public:
   explicit ObjectTracker(unsigned detector_period);
   ~ObjectTracker();
 
-  void processFrame(const cv::Mat &frame_bgr, const ros::Time &timestamp);
+  void processFrame(const cv::Mat &frame_bgr, const ros::Time &timestamp, const float& yaw);
   void debugDrawTracks(cv::Mat *frame_bgr);
   bool getFinishedTrack(std::vector<Observation> *observations);
 
@@ -57,6 +57,8 @@ private:
   std::unordered_map<unsigned, std::unique_ptr<KCFTracker>> trackers_;
   std::unordered_map<unsigned, ObjectView> track_heads_;
   std::unordered_map<unsigned, std::vector<Observation>> tracks_;
+
+  std::map<int, float> track_yaws_;
 
   std::queue<unsigned> finished_tracks_;
 

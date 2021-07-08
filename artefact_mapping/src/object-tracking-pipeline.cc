@@ -26,7 +26,7 @@ DEFINE_string(sensor_calibration_file, "share/camchain.yaml",
 DEFINE_string(sensor_tf_frame, "/blackfly_right_optical_link",
               "Camera TF frame.");
 DEFINE_string(odom_tf_frame, "/odom", "Odometry TF frame.");
-
+DEFINE_string(map_tf_frame, "/map", "Map TF frame.");
 DEFINE_bool(publish_debug_images, false,
             "Whether to publish the debug image with tracking information.");
 
@@ -68,13 +68,35 @@ void ObjectTrackingPipeline::imageCallback(
   // when requesting rgb the image we get is actually bgr
   cv_ptr->encoding = "bgr8";
 
-  tracker_.processFrame(cv_ptr->image, image_message->header.stamp);
+
+  tf::StampedTransform transform;
+  try {
+    tf_listener_->lookupTransform(FLAGS_odom_tf_frame, FLAGS_sensor_tf_frame,
+        image_message->header.stamp, transform);
+  }
+  catch (tf::TransformException ex) {
+    ROS_ERROR("%s", ex.what());
+    return;
+  }
+
+  aslam::Transformation T_yaw;
+  tf::transformTFToKindr(transform, &T_yaw);
+  Eigen::Matrix3d R_yaw = T_yaw.getRotationMatrix();
+  Eigen::Vector3d euler_angles = R_yaw.eulerAngles(2, 1, 0); // yaw-pitch-roll
+  float yaw = euler_angles[0];
+
+  // cout << "yaw pitch roll = " << euler_angles.transpose() << endl;
+
+
+  tracker_.processFrame(cv_ptr->image, image_message->header.stamp, yaw);
 
   std::vector<Observation> observations;
   while (tracker_.getFinishedTrack(&observations)) {
     VLOG(1) << "Triangulate track with size " << observations.size();
     triangulateTracks(observations);
   }
+
+
 
   if (FLAGS_publish_debug_images) {
     tracker_.debugDrawTracks(&cv_ptr->image);
@@ -135,25 +157,49 @@ void ObjectTrackingPipeline::triangulateTracks(
   VLOG(200) << "Assembled triangulation data.";
 
   // Triangulate the landmark.
-  CHECK_EQ(normalized_measurements.size(), T_W_Bs.size());
-  aslam::TriangulationResult triangulation_result =
-      aslam::linearTriangulateFromNViews(normalized_measurements, T_W_Bs, T_B_C,
-                                         &W_landmark);
-  VLOG(1) << "Triangulated landmark at " << W_landmark;
+  if(observations.size() > 2){
+    CHECK_EQ(normalized_measurements.size(), T_W_Bs.size());
+    aslam::TriangulationResult triangulation_result =
+        aslam::linearTriangulateFromNViews(normalized_measurements, T_W_Bs, T_B_C,
+                                          &W_landmark);
+    VLOG(1) << "Triangulated landmark at " << W_landmark;
 
-  geometry_msgs::PointStamped landmark_msg;
-  landmark_msg.header.frame_id = "odom";
-  landmark_msg.header.stamp = observations.back().timestamp_;
-  landmark_msg.point.x = W_landmark[0];
-  landmark_msg.point.y = W_landmark[1];
-  landmark_msg.point.z = W_landmark[2];
-  landmark_publisher_.publish(landmark_msg);
+    Observation mid_observation = observations[int(observations.size()/2)];
 
-  artefact_msgs::Artefact artefact_msg;
-  artefact_msg.header = landmark_msg.header;
-  artefact_msg.landmark = landmark_msg;
-  std::sort(class_labels.begin(), class_labels.end()); // Report the most observed object class.
-  artefact_msg.class_label = (unsigned) class_labels[(int) class_labels.size()/2];
-  artefact_msg.quality = 0; // Placeholder, not implemented yet!
-  artefact_publisher_.publish(artefact_msg);
+    tf::StampedTransform transform_mid;
+    try {
+      tf_listener_->lookupTransform(FLAGS_map_tf_frame, FLAGS_odom_tf_frame,
+          mid_observation.timestamp_, transform_mid);
+    }
+    catch (tf::TransformException ex) {
+      ROS_ERROR("%s", ex.what());
+      return;
+    }
+
+    aslam::Transformation T_mid;
+    tf::transformTFToKindr(transform_mid, &T_mid);
+    Eigen::Matrix3d R_mid = T_mid.getRotationMatrix();
+    Eigen::Vector3d p_mid = T_mid.getPosition();
+    Eigen::Vector3d W_landmark_mid;
+    W_landmark_mid = R_mid*W_landmark + p_mid;
+
+
+    geometry_msgs::PointStamped landmark_msg;
+    landmark_msg.header.frame_id = "map";
+    landmark_msg.header.stamp = mid_observation.timestamp_;
+    landmark_msg.point.x = W_landmark_mid[0];
+    landmark_msg.point.y = W_landmark_mid[1];
+    landmark_msg.point.z = W_landmark_mid[2];
+    landmark_publisher_.publish(landmark_msg);
+
+
+
+    artefact_msgs::Artefact artefact_msg;
+    artefact_msg.header = landmark_msg.header;
+    artefact_msg.landmark = landmark_msg;
+    std::sort(class_labels.begin(), class_labels.end()); // Report the most observed object class.
+    artefact_msg.class_label = (unsigned) class_labels[(int) class_labels.size()/2];
+    artefact_msg.quality = 0; // Placeholder, not implemented yet!
+    artefact_publisher_.publish(artefact_msg);
+    }
 }

@@ -47,7 +47,7 @@ ObjectTracker::~ObjectTracker() {
 }
 
 void ObjectTracker::processFrame(
-    const cv::Mat& frame_bgr, const ros::Time& timestamp) {
+    const cv::Mat& frame_bgr, const ros::Time& timestamp, const float& yaw) {
   // Run trackers.
   bool lost_track;
   std::vector<unsigned> lost_track_ids;
@@ -58,6 +58,16 @@ void ObjectTracker::processFrame(
     // Track for next frame
     const cv::Rect& bbox = tracker.update(frame_bgr, lost_track);
     common::getChecked(track_heads_, track_id).setBBox(bbox);
+
+
+    if (track_yaws_.count(track_id)>0) {
+      std::cout<<"yaw: "<<(abs(track_yaws_[track_id]-yaw))<<std::endl;
+      if(abs(track_yaws_[track_id]-yaw)>1.0) {
+        lost_track = true;
+        track_yaws_.erase(track_id);
+      }
+    }
+
 
     // Drop tracker and track if we lost it
     if (lost_track) {
@@ -166,6 +176,9 @@ void ObjectTracker::processFrame(
         if (best_iou < FLAGS_track_reassociation_iou) {
           // Create new track and tracker
           track_id = last_track_id_++;
+          
+          track_yaws_[track_id] = yaw;
+
           trackers_.emplace(
               track_id, std::unique_ptr<KCFTracker>(
                             new KCFTracker(true, true, true, false,
