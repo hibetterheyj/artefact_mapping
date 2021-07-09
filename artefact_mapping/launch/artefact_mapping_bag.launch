@@ -1,0 +1,39 @@
+<launch>
+  <!-- ARG -->
+  <arg name="smb_number" default="264"/>
+  <arg name="play_rate" default="1.0" />
+  <arg name="bag_folder" default="/home/he/bag" />
+  <arg name="task" default="artifact" />
+  <arg name="bag_name" default="artefacts_garage" />
+  <arg name="use_tiny" default="true" />
+  
+  <!-- NODE -->
+  <!-- param clock Publish the clock time -->
+  <node pkg="rosbag" type="play" name="artifact_rosbag_play" args="--clock -r $(arg play_rate) 
+        $(arg bag_folder)/$(arg task)/$(arg bag_name).bag" />
+
+  <!-- USE YOLO-TINY-->
+  <group if="$(arg use_tiny)">
+    <node name="artefact_mapping" pkg="artefact_mapping" type="artefact_mapping" >
+      <param name="object_tracker_image_topic" value="/versavis/cam0/image_raw"/>
+      <param name="sensor_calibration_file" value="$(find artefact_mapping)/share/camchain-smb$(arg smb_number).yaml"/>
+      <param name="darknet_cfg_path" value="$(find artefact_mapping)/share/yolov3-tiny.cfg"/>
+      <param name="darknet_weights_path" value="$(find artefact_mapping)/share/yolov3-tiny.weights"/>
+      <param name="publish_debug_images" value="true" />
+      <param name="darknet_classes" value="0,2,3,11,74" />
+    </node>  
+  </group>
+
+  <!-- USE YOLO-->
+  <group unless="$(arg use_tiny)">
+    <node name="artefact_mapping" pkg="artefact_mapping" type="artefact_mapping">
+      <param name="object_tracker_image_topic" value="/versavis/cam0/image_raw" />
+      <param name="sensor_calibration_file" value="$(find artefact_mapping)/share/camchain-smb$(arg smb_number).yaml" />
+      <param name="darknet_cfg_path" value="$(find artefact_mapping)/share/yolov3.cfg" />
+      <param name="darknet_weights_path" value="$(find artefact_mapping)/share/yolov3.weights" />
+      <param name="publish_debug_images" value="true" />
+      <param name="darknet_classes" value="0,2,3,11,74" />
+    </node>
+  </group>
+
+</launch>
