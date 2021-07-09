@@ -17,7 +17,7 @@ show_detected_instance = False
 # data csv
 # person | stop | backpack | umbrella | bottle | clock |
 class_label = 'stop'
-experiment = 'zurich_garage'
+experiment = 'final_challenge'  # final_challenge | zurich_garage
 instances_df = pd.read_csv('./' + experiment + '_' + class_label + '.csv')
 x = instances_df['X'].values.reshape((-1, 1))
 y = instances_df['Y'].values.reshape((-1, 1))

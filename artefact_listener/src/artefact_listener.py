@@ -88,7 +88,7 @@ class ArteListener:
 
 if __name__ == "__main__":
     # wangen_a_a | zurich_garage | zurich_polystrasse
-    export_name = 'zurich_garage'
+    export_name = 'final_challenge'  # final_challenge | zurich_garage
     artefact_listener = ArteListener(export_name)
     try:
         artefact_listener.save_to_csv()
