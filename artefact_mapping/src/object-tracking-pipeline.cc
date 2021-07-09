@@ -179,13 +179,14 @@ void ObjectTrackingPipeline::triangulateTracks(
     aslam::Transformation T_mid;
     tf::transformTFToKindr(transform_mid, &T_mid);
     Eigen::Matrix3d R_mid = T_mid.getRotationMatrix();
+    Eigen::Vector3d p_mid_offset(1.67, -1.41, 0.674);
     Eigen::Vector3d p_mid = T_mid.getPosition();
     Eigen::Vector3d W_landmark_mid;
-    W_landmark_mid = R_mid*W_landmark + p_mid;
+    W_landmark_mid = R_mid*W_landmark + p_mid - p_mid_offset;
 
 
     geometry_msgs::PointStamped landmark_msg;
-    landmark_msg.header.frame_id = "map";
+    landmark_msg.header.frame_id = FLAGS_map_tf_frame;
     landmark_msg.header.stamp = mid_observation.timestamp_;
     landmark_msg.point.x = W_landmark_mid[0];
     landmark_msg.point.y = W_landmark_mid[1];

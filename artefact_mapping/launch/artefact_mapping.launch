@@ -1,15 +1,20 @@
 <launch>
-  <arg name="smb_number" default="262"/>
+  <arg name="smb_number" default="264"/>
   <node name="artefact_mapping" pkg="artefact_mapping" type="artefact_mapping" >
     <param name="object_tracker_image_topic" value="/versavis/cam0/image_raw"/>
     <param name="sensor_calibration_file" value="$(find artefact_mapping)/share/camchain-smb$(arg smb_number).yaml"/>
     <param name="darknet_cfg_path" value="$(find artefact_mapping)/share/yolov3-tiny.cfg"/>
     <param name="darknet_weights_path" value="$(find artefact_mapping)/share/yolov3-tiny.weights"/>
-    <param name="darknet_classes" value="0,2,3,7,4,74,11,46"/>
+    <param name="darknet_classes" value="0,74,11,46,24,25,39"/>
     <param name="object_tracker_detection_period" value="20"/>
-    <param name="darknet_detection_threshold" value="0.4"/>
-    <param name="darknet_nms_threshold" value="0.45"/>
+    <param name="darknet_detection_threshold" value="0.1"/>
+    <param name="darknet_nms_threshold" value="0.2"/>
+    <param name="track_reassociation_iou" value="0.15"/>
+    <param name="image_topic_buffer_size" value="170"/>
     <param name="tracker_confidence_threshold" value="0.8"/>
-    <param name="track_reassociation_iou" value="0.3"/>
+    <param name="sensor_tf_frame" value="/blackfly_right_optical_link"/>
+    <param name="odom_tf_frame" value="/odom"/>
+    <param name="map_tf_frame" value="/map"/>
+    <param name="publish_debug_images" value="true"/>
   </node>  
 </launch>

@@ -60,13 +60,14 @@ void ObjectTracker::processFrame(
     common::getChecked(track_heads_, track_id).setBBox(bbox);
 
 
-    if (track_yaws_.count(track_id)>0) {
-      std::cout<<"yaw: "<<(abs(track_yaws_[track_id]-yaw))<<std::endl;
-      if(abs(track_yaws_[track_id]-yaw)>1.0) {
-        lost_track = true;
-        track_yaws_.erase(track_id);
-      }
-    }
+    // if (track_yaws_.count(track_id)>0) {
+      // std::cout<<"yaw: "<<(abs(track_yaws_[track_id]-yaw))<<std::endl;
+      // std::cout<<"track_id: "<<track_id<<std::endl;
+      // if(abs(track_yaws_[track_id]-yaw)>1.0) {
+      //   lost_track = true;
+      //   track_yaws_.erase(track_id);
+      // }
+    // }
 
 
     // Drop tracker and track if we lost it
